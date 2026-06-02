@@ -145,14 +145,6 @@ export default function BookingPage() {
     return formatTime24(d);
   }, [selectedWindow]);
 
-  const arrivalPickerOptions = useMemo(() => {
-    if (!selectedWindow) return [];
-    const opts: number[] = [];
-    for (let off = 0; off <= maxArrivalOffset; off += 5) opts.push(off);
-    if (opts.length > 0 && opts[opts.length - 1] < maxArrivalOffset) opts.push(maxArrivalOffset);
-    return opts;
-  }, [selectedWindow, maxArrivalOffset]);
-
   // Sync HH/MM fields when offset or window changes
   React.useEffect(() => {
     if (selectedWindow) {
