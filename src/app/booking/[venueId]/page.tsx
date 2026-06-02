@@ -14,7 +14,6 @@ import {
 import { createBooking, type CreateBookingRequest } from "@/lib/api/bookings";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { MonoTag } from "@/components/ui/mono-tag";
-import { CutBox } from "@/components/ui/cut-box";
 import { CTAButton } from "@/components/ui/cta-button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { StepBar } from "@/components/booking/step-bar";
@@ -79,6 +78,8 @@ export default function BookingPage() {
   });
   const [selectedWindowIdx, setSelectedWindowIdx] = useState<number | null>(null);
   const [arrivalOffset, setArrivalOffset] = useState(0);
+  const [arrivalHH, setArrivalHH] = useState("");
+  const [arrivalMM, setArrivalMM] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(MIN_DURATION_MIN);
 
   const dates = useMemo(() => buildDateStrip(), []);
@@ -152,6 +153,42 @@ export default function BookingPage() {
     return opts;
   }, [selectedWindow, maxArrivalOffset]);
 
+  // Sync HH/MM fields when offset or window changes
+  React.useEffect(() => {
+    if (selectedWindow) {
+      const timeStr = formatArrival(arrivalOffset);
+      const [h, m] = timeStr.split(":");
+      setArrivalHH(h);
+      setArrivalMM(m);
+    }
+  }, [selectedWindow, arrivalOffset, formatArrival]);
+
+  const mmRef = React.useRef<HTMLInputElement>(null);
+
+  const commitArrivalTime = useCallback((hh: string, mm: string) => {
+    if (!selectedWindow) return;
+    const hours = parseInt(hh, 10);
+    const minutes = parseInt(mm, 10);
+    if (isNaN(hours) || isNaN(minutes) || hours > 23 || minutes > 59) {
+      const timeStr = formatArrival(arrivalOffset);
+      const [h, m] = timeStr.split(":");
+      setArrivalHH(h);
+      setArrivalMM(m);
+      return;
+    }
+    const windowStart = new Date(selectedWindow.startsAt);
+    const target = new Date(windowStart);
+    target.setHours(hours, minutes, 0, 0);
+    if (target.getTime() < windowStart.getTime()) {
+      target.setDate(target.getDate() + 1);
+    }
+    let offsetMin = Math.round((target.getTime() - windowStart.getTime()) / MS_PER_MIN);
+    offsetMin = Math.max(0, Math.min(offsetMin, maxArrivalOffset));
+    offsetMin = Math.round(offsetMin / 5) * 5;
+    offsetMin = Math.min(offsetMin, maxArrivalOffset);
+    setArrivalOffset(offsetMin);
+  }, [selectedWindow, arrivalOffset, formatArrival, maxArrivalOffset]);
+
   const bookMutation = useMutation({
     mutationFn: (data: CreateBookingRequest) => createBooking(data),
     onSuccess: (booking) => router.replace(`/booking/ticket/${booking.id}`),
@@ -221,15 +258,18 @@ export default function BookingPage() {
   const summaryText = summaryParts.join("  \u00B7  ");
 
   return (
-    <div className="min-h-screen relative" style={{ backgroundColor: GB.bg }}>
-      <div className="max-w-2xl mx-auto pb-48">
+    <div className="flex flex-col h-[100dvh]" style={{ backgroundColor: GB.bg }}>
+      <div className="flex-1 overflow-y-auto">
+      <div className="max-w-2xl mx-auto pb-6">
         {/* Header */}
         <div className="flex items-center gap-2.5 px-4 pt-6 pb-2.5">
-          <CutBox cut={6} variant="trapezoid" backgroundColor={GB.surface} borderColor={GB.border} onClick={() => router.back()} style={{ width: 36, height: 36 }}>
-            <div className="flex items-center justify-center w-full h-full">
-              <Icon name="arrowLeft" size={16} color={GB.fg2} />
-            </div>
-          </CutBox>
+          <button
+            onClick={() => router.back()}
+            className="w-9 h-9 flex items-center justify-center border"
+            style={{ backgroundColor: GB.surface, borderColor: GB.border, borderRadius: 6 }}
+          >
+            <Icon name="arrowLeft" size={16} color={GB.fg2} />
+          </button>
           <span className="flex-1 font-head font-bold text-[15px] uppercase" style={{ color: GB.fg, letterSpacing: "1.8px" }}>
             BOOK A BAY
           </span>
@@ -250,7 +290,7 @@ export default function BookingPage() {
         <SectionHeader sub={`${venue.stations.length} BAYS`}>PICK STATION</SectionHeader>
         <div className="space-y-1.5 px-4 mb-5">
           {venue.stations.map((station) => {
-            const availHours = stationAvailHours.get(station.id) ?? 0;
+            const availHours = stationAvailHours.get(station.id);
             const isSelected = selectedStationId === station.id;
             const icon = KIND_ICON[station.kind] ?? "monitor";
             return (
@@ -259,6 +299,7 @@ export default function BookingPage() {
                 station={station}
                 icon={icon}
                 availableHours={availHours}
+                availLoading={availLoading}
                 selected={isSelected}
                 onClick={() => handleStationSelect(station.id)}
               />
@@ -279,6 +320,7 @@ export default function BookingPage() {
                 style={{
                   backgroundColor: isActive ? GB.accent : GB.surface,
                   borderColor: isActive ? GB.accent : GB.border,
+                  borderRadius: 6,
                 }}
               >
                 <span className="font-mono text-[9px] font-semibold" style={{ color: isActive ? GB.fgInv : GB.fg3, letterSpacing: "0.72px" }}>
@@ -313,25 +355,30 @@ export default function BookingPage() {
                   const spanMin = windowMinutes(w);
                   const isSelected = selectedWindowIdx === i;
                   return (
-                    <CutBox
+                    <button
                       key={w.startsAt}
-                      cut={6}
-                      variant="trapezoid"
-                      backgroundColor={isSelected ? "rgba(123,53,255,0.08)" : GB.surface}
-                      borderColor={isSelected ? GB.primary : GB.border}
                       onClick={() => handleWindowSelect(i)}
-                      style={isSelected ? { boxShadow: `0 0 8px ${GB.primGlow}` } : undefined}
+                      className="w-full border transition-colors"
+                      style={{
+                        backgroundColor: isSelected ? "rgba(123,53,255,0.08)" : GB.surface,
+                        borderColor: isSelected ? GB.primary : GB.border,
+                        borderRadius: 6,
+                        boxShadow: isSelected ? `0 0 8px ${GB.primGlow}` : undefined,
+                      }}
                     >
                       <div className="flex items-center px-3.5 py-3 gap-2.5">
-                        <div className="w-8 h-8 flex items-center justify-center border" style={{ backgroundColor: GB.raised, borderColor: isSelected ? GB.primary : GB.border }}>
+                        <div
+                          className="w-8 h-8 flex items-center justify-center border"
+                          style={{ backgroundColor: GB.raised, borderColor: isSelected ? GB.primary : GB.border, borderRadius: 4 }}
+                        >
                           <Icon name="clock" size={14} color={isSelected ? GB.primary : GB.fg3} />
                         </div>
-                        <span className="flex-1 font-mono text-[14px] font-semibold" style={{ color: isSelected ? GB.fg : GB.fg2, letterSpacing: "0.84px" }}>
+                        <span className="flex-1 text-left font-mono text-[14px] font-semibold" style={{ color: isSelected ? GB.fg : GB.fg2, letterSpacing: "0.84px" }}>
                           {startLabel} – {endLabel}
                         </span>
                         <MonoTag color={isSelected ? GB.primary : GB.fg3}>{formatDurationMins(spanMin)}</MonoTag>
                       </div>
-                    </CutBox>
+                    </button>
                   );
                 })}
                 {stationWindows.length === 0 && (
@@ -353,10 +400,16 @@ export default function BookingPage() {
 
             {/* Arrival selector */}
             <div className="px-4 mb-3">
-              <CutBox cut={6} variant="trapezoid" backgroundColor={GB.surface} borderColor={GB.border}>
+              <div
+                className="border"
+                style={{ backgroundColor: GB.surface, borderColor: GB.border, borderRadius: 6 }}
+              >
                 <div className="flex items-center justify-between px-3.5 py-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 flex items-center justify-center border" style={{ backgroundColor: GB.raised, borderColor: GB.border }}>
+                    <div
+                      className="w-8 h-8 flex items-center justify-center border"
+                      style={{ backgroundColor: GB.raised, borderColor: GB.border, borderRadius: 4 }}
+                    >
                       <Icon name="clock" size={16} color={GB.bright} />
                     </div>
                     <div>
@@ -364,20 +417,59 @@ export default function BookingPage() {
                       <span className="font-mono text-[9px] mt-0.5 block" style={{ color: GB.fg3 }}>SELECT TIME</span>
                     </div>
                   </div>
-                  <select
-                    value={arrivalOffset}
-                    onChange={(e) => setArrivalOffset(Number(e.target.value))}
-                    className="font-disp text-[28px] bg-transparent border-none outline-none cursor-pointer text-right"
-                    style={{ color: GB.accent, letterSpacing: "1.12px" }}
-                  >
-                    {arrivalPickerOptions.map((off) => (
-                      <option key={off} value={off} style={{ backgroundColor: GB.surface, color: GB.fg }}>
-                        {formatArrival(off)}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex flex-col items-center">
+                      <span className="font-mono text-[7px] mb-0.5" style={{ color: GB.fg3, letterSpacing: "1px" }}>HR</span>
+                      <div
+                        className="w-[52px] h-[44px] flex items-center justify-center border"
+                        style={{ backgroundColor: GB.raised, borderColor: GB.border, borderRadius: 4 }}
+                      >
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={arrivalHH}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+                            setArrivalHH(v);
+                            if (v.length === 2) mmRef.current?.focus();
+                          }}
+                          onBlur={() => commitArrivalTime(arrivalHH, arrivalMM)}
+                          onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                          placeholder="00"
+                          maxLength={2}
+                          className="font-disp text-[26px] bg-transparent border-none outline-none text-center w-full"
+                          style={{ color: GB.accent, letterSpacing: "1px" }}
+                        />
+                      </div>
+                    </div>
+                    <span className="font-disp text-[26px] mt-2.5" style={{ color: GB.fg3 }}>:</span>
+                    <div className="flex flex-col items-center">
+                      <span className="font-mono text-[7px] mb-0.5" style={{ color: GB.fg3, letterSpacing: "1px" }}>MIN</span>
+                      <div
+                        className="w-[52px] h-[44px] flex items-center justify-center border"
+                        style={{ backgroundColor: GB.raised, borderColor: GB.border, borderRadius: 4 }}
+                      >
+                        <input
+                          ref={mmRef}
+                          type="text"
+                          inputMode="numeric"
+                          value={arrivalMM}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+                            setArrivalMM(v);
+                          }}
+                          onBlur={() => commitArrivalTime(arrivalHH, arrivalMM)}
+                          onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+                          placeholder="00"
+                          maxLength={2}
+                          className="font-disp text-[26px] bg-transparent border-none outline-none text-center w-full"
+                          style={{ color: GB.accent, letterSpacing: "1px" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </CutBox>
+              </div>
             </div>
 
             <div className="px-4 mb-5">
@@ -396,16 +488,14 @@ export default function BookingPage() {
           </>
         )}
       </div>
+      </div>
 
-      {/* Sticky bottom */}
+      {/* Bottom bar — always pinned */}
       <div
-        className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30"
-        style={{
-          background: "linear-gradient(to top, rgba(8,8,16,0.97) 60%, transparent)",
-          padding: "24px 16px 18px",
-        }}
+        className="shrink-0 border-t"
+        style={{ backgroundColor: GB.bg, borderColor: GB.border }}
       >
-        <div className="max-w-2xl mx-auto space-y-2">
+        <div className="max-w-2xl mx-auto px-4 pt-3 pb-4 space-y-2">
           <div className="flex justify-between items-baseline">
             <span className="font-mono text-[10px] flex-1" style={{ color: GB.fg3, letterSpacing: "0.8px" }}>
               {summaryText}
@@ -433,41 +523,50 @@ function BookingStationRow({
   station,
   icon,
   availableHours,
+  availLoading,
   selected,
   onClick,
 }: {
   station: StationResponse;
   icon: IconName;
-  availableHours: number;
+  availableHours: number | undefined;
+  availLoading: boolean;
   selected: boolean;
   onClick: () => void;
 }) {
-  const hasAvail = availableHours > 0;
+  const loaded = !availLoading && availableHours !== undefined;
+  const hasAvail = loaded && availableHours > 0;
 
   return (
-    <CutBox
-      cut={6}
-      variant="trapezoid"
-      backgroundColor={selected ? "rgba(204,255,0,0.06)" : GB.surface}
-      borderColor={selected ? GB.accent : GB.border}
+    <button
       onClick={onClick}
-      style={selected ? { boxShadow: `0 0 8px ${GB.cyanGlow}` } : undefined}
+      className="w-full border transition-colors"
+      style={{
+        backgroundColor: selected ? "rgba(204,255,0,0.06)" : GB.surface,
+        borderColor: selected ? GB.accent : GB.border,
+        borderRadius: 6,
+        boxShadow: selected ? `0 0 8px ${GB.cyanGlow}` : undefined,
+      }}
     >
       <div className="flex items-center gap-2.5 px-3 py-2.5">
         <div
           className="w-[38px] h-[38px] flex items-center justify-center border"
-          style={{ backgroundColor: GB.raised, borderColor: selected ? GB.accent : GB.border }}
+          style={{ backgroundColor: GB.raised, borderColor: selected ? GB.accent : GB.border, borderRadius: 4 }}
         >
           <Icon name={icon} size={18} color={selected ? GB.accent : GB.bright} />
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 text-left">
           <div className="flex items-center gap-1.5">
             <span className="font-head font-bold text-[13px]" style={{ color: GB.fg, letterSpacing: "0.52px" }}>
               {station.label}
             </span>
-            <MonoTag color={hasAvail ? GB.success : GB.danger}>
-              {hasAvail ? `${availableHours}h FREE` : "FULL"}
-            </MonoTag>
+            {availLoading ? (
+              <MonoTag color={GB.fg3}>...</MonoTag>
+            ) : loaded ? (
+              <MonoTag color={hasAvail ? GB.success : GB.danger}>
+                {hasAvail ? `${availableHours}h FREE` : "FULL"}
+              </MonoTag>
+            ) : null}
           </div>
           {station.specs.length > 0 && (
             <span className="font-mono text-[9px] mt-0.5 block truncate" style={{ color: GB.fg3, letterSpacing: "0.72px" }}>
@@ -482,6 +581,6 @@ function BookingStationRow({
           <span className="font-mono text-[8px] block mt-0.5" style={{ color: GB.fg3 }}>GEL / HR</span>
         </div>
       </div>
-    </CutBox>
+    </button>
   );
 }

@@ -9,21 +9,9 @@ import { fetchVenues, type VenueResponse } from "@/lib/api/venues";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { Icon } from "@/components/ui/icon";
 
-/* Leaflet must be loaded client-side only */
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((m) => m.MapContainer),
-  { ssr: false },
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((m) => m.TileLayer),
-  { ssr: false },
-);
-const CircleMarker = dynamic(
-  () => import("react-leaflet").then((m) => m.CircleMarker),
-  { ssr: false },
-);
-const Popup = dynamic(
-  () => import("react-leaflet").then((m) => m.Popup),
+/* Leaflet must be loaded client-side only — single dynamic import preserves React context */
+const LeafletMap = dynamic(
+  () => import("@/components/map/leaflet-map"),
   { ssr: false },
 );
 
@@ -79,41 +67,13 @@ export default function MapPage() {
     <div className="flex h-screen lg:h-screen">
       {/* Map */}
       <div className="flex-1 relative">
-        <MapContainer
-          center={[center.lat, center.lng]}
-          zoom={13}
-          className="w-full h-full"
-          style={{ background: "#080810" }}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution=""
-          />
-          {mappable.map((v) => (
-            <CircleMarker
-              key={v.id}
-              center={[v.latitude!, v.longitude!]}
-              radius={8}
-              pathOptions={{
-                color: selected?.id === v.id ? GB.accent : GB.cyan,
-                fillColor: selected?.id === v.id ? GB.accent : GB.cyan,
-                fillOpacity: 0.8,
-                weight: 2,
-              }}
-              eventHandlers={{
-                click: () => setSelected(v),
-              }}
-            >
-              <Popup>
-                <div style={{ color: "#080810", fontFamily: "var(--font-space-grotesk)" }}>
-                  <strong>{v.name}</strong>
-                  <br />
-                  <span style={{ fontSize: 11 }}>{v.address}</span>
-                </div>
-              </Popup>
-            </CircleMarker>
-          ))}
-        </MapContainer>
+        <LeafletMap
+          center={center}
+          venues={mappable}
+          selectedId={selected?.id ?? null}
+          onSelect={setSelected}
+          userCoords={coords ?? null}
+        />
 
         {/* Bottom venue card */}
         {selected && (

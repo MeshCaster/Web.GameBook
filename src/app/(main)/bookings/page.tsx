@@ -7,7 +7,6 @@ import { GB } from "@/theme/tokens";
 import { fetchMyBookings, type BookingResponse } from "@/lib/api/bookings";
 import { Icon } from "@/components/ui/icon";
 import { MonoTag } from "@/components/ui/mono-tag";
-import { CutBox } from "@/components/ui/cut-box";
 import { SectionHeader } from "@/components/ui/section-header";
 
 /* ─── Helpers ─── */
@@ -56,36 +55,24 @@ function BookingCard({ booking }: { booking: BookingResponse }) {
     new Date(booking.endsAt).getTime() > Date.now();
   const countdown = isUpcoming ? getCountdown(booking.startsAt) : null;
 
+  const statusColor = st === "cancelled" ? GB.danger : isUpcoming ? GB.success : GB.fg3;
+  const statusLabel = st === "cancelled" ? "CANCELLED" : isUpcoming ? booking.status.toUpperCase() : "COMPLETED";
+
   return (
-    <Link href={`/booking/ticket/${booking.id}`}>
-      <CutBox
-        cut={10}
-        backgroundColor={GB.surface}
-        borderColor={isUpcoming ? GB.borderHi : GB.border}
-        style={
-          isUpcoming
-            ? { boxShadow: `0 0 16px rgba(123,53,255,0.12)` }
-            : undefined
-        }
+    <Link href={`/booking/ticket/${booking.id}`} className="block">
+      <div
+        className="border overflow-hidden transition-colors"
+        style={{
+          backgroundColor: GB.surface,
+          borderColor: isUpcoming ? GB.borderHi : GB.border,
+          borderRadius: 10,
+          boxShadow: isUpcoming ? `0 2px 16px rgba(123,53,255,0.10)` : undefined,
+        }}
       >
-        <div className="p-3.5">
-          {/* Top row */}
+        <div className="px-4 py-3.5">
+          {/* Header row — status + countdown */}
           <div className="flex justify-between items-center mb-2">
-            <MonoTag
-              color={
-                st === "cancelled"
-                  ? GB.danger
-                  : isUpcoming
-                    ? GB.success
-                    : GB.fg3
-              }
-            >
-              {st === "cancelled"
-                ? "CANCELLED"
-                : isUpcoming
-                  ? booking.status.toUpperCase()
-                  : "COMPLETED"}
-            </MonoTag>
+            <MonoTag color={statusColor}>{statusLabel}</MonoTag>
             {countdown && (
               <span
                 className="font-head font-bold text-[11px]"
@@ -104,56 +91,43 @@ function BookingCard({ booking }: { booking: BookingResponse }) {
             {booking.venueName}
           </p>
 
-          {/* Details */}
+          {/* Date / time row */}
           <div className="flex items-center mt-2 gap-3">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <Icon name="calendar" size={12} color={GB.fg3} />
-              <span
-                className="font-mono text-[10px]"
-                style={{ color: GB.fg2, letterSpacing: "0.6px" }}
-              >
+              <span className="font-mono text-[10px]" style={{ color: GB.fg2, letterSpacing: "0.6px" }}>
                 {formatDateLabel(booking.startsAt)}
               </span>
             </div>
-            <div className="flex items-center gap-1">
-              <Icon name="clock" size={12} color={GB.fg3} />
-              <span
-                className="font-mono text-[10px]"
-                style={{ color: GB.fg2, letterSpacing: "0.6px" }}
-              >
-                {formatTime(booking.startsAt)} · {computeDuration(booking.startsAt, booking.endsAt)}
-              </span>
-            </div>
-          </div>
-
-          {/* Bottom */}
-          <div
-            className="flex justify-between items-baseline mt-2.5 pt-2.5 border-t"
-            style={{ borderColor: GB.border }}
-          >
             <div className="flex items-center gap-1.5">
-              <Icon name="monitor" size={12} color={GB.bright} />
-              <span
-                className="font-mono text-[10px]"
-                style={{ color: GB.fg2, letterSpacing: "0.8px" }}
-              >
-                {booking.stationLabel}
+              <Icon name="clock" size={12} color={GB.fg3} />
+              <span className="font-mono text-[10px]" style={{ color: GB.fg2, letterSpacing: "0.6px" }}>
+                {formatTime(booking.startsAt)} – {formatTime(booking.endsAt)}
               </span>
             </div>
-            <div className="flex items-baseline gap-0.5">
-              <span
-                className="font-disp text-[18px]"
-                style={{ color: GB.accent, letterSpacing: "0.72px" }}
-              >
-                {booking.totalPrice}
-              </span>
-              <span className="font-mono text-[9px]" style={{ color: GB.fg3 }}>
-                {booking.currency}
-              </span>
-            </div>
+            <MonoTag color={GB.cyan}>{computeDuration(booking.startsAt, booking.endsAt)}</MonoTag>
           </div>
         </div>
-      </CutBox>
+
+        {/* Footer — station + price */}
+        <div
+          className="px-4 py-2.5 flex justify-between items-center border-t"
+          style={{ borderColor: GB.border, backgroundColor: GB.raised }}
+        >
+          <div className="flex items-center gap-1.5">
+            <Icon name="monitor" size={12} color={GB.bright} />
+            <span className="font-mono text-[10px]" style={{ color: GB.fg2, letterSpacing: "0.8px" }}>
+              {booking.stationLabel}
+            </span>
+          </div>
+          <div className="flex items-baseline gap-1">
+            <span className="font-disp text-[18px]" style={{ color: GB.accent, letterSpacing: "0.72px" }}>
+              {booking.totalPrice}
+            </span>
+            <span className="font-mono text-[9px]" style={{ color: GB.fg3 }}>{booking.currency}</span>
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }
@@ -206,9 +180,7 @@ export default function BookingsPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <span className="font-mono text-[11px]" style={{ color: GB.fg3, letterSpacing: "1.32px" }}>
-            LOADING...
-          </span>
+          <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: GB.primary, borderTopColor: "transparent" }} />
         </div>
       ) : isEmpty ? (
         <div className="flex flex-col items-center justify-center py-20 px-8">
@@ -239,7 +211,7 @@ export default function BookingsPage() {
               <SectionHeader sub={`${upcoming.length}`} className="mt-3">
                 UPCOMING
               </SectionHeader>
-              <div className="space-y-2.5 px-4 mb-6">
+              <div className="space-y-8 px-4 mb-6">
                 {upcoming.map((b) => (
                   <BookingCard key={b.id} booking={b} />
                 ))}
@@ -252,7 +224,7 @@ export default function BookingsPage() {
               <SectionHeader sub={`${past.length}`} className={upcoming.length > 0 ? "" : "mt-3"}>
                 PAST
               </SectionHeader>
-              <div className="space-y-2.5 px-4">
+              <div className="space-y-8 px-4">
                 {past.map((b) => (
                   <BookingCard key={b.id} booking={b} />
                 ))}

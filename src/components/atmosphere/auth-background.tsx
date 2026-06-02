@@ -12,8 +12,8 @@ export const AuthBackground = React.memo(function AuthBackground() {
         className="absolute inset-0 opacity-20"
         style={{
           backgroundImage: `
-            linear-gradient(to right, #1A1A2F 0.5px, transparent 0.5px),
-            linear-gradient(to bottom, #1A1A2F 0.5px, transparent 0.5px)
+            linear-gradient(to right, #2E2254 0.5px, transparent 0.5px),
+            linear-gradient(to bottom, #2E2254 0.5px, transparent 0.5px)
           `,
           backgroundSize: `${GRID_SPACING}px ${GRID_SPACING}px`,
           maskImage: "radial-gradient(ellipse 50% 35% at 50% 23%, white 0%, transparent 100%)",
@@ -57,7 +57,7 @@ export const AuthBackground = React.memo(function AuthBackground() {
       <div
         className="absolute inset-0"
         style={{
-          background: "linear-gradient(to bottom, transparent 25%, rgba(8,8,15,0.6) 45%, rgba(8,8,15,0.92) 60%, #08080F 75%)",
+          background: "linear-gradient(to bottom, transparent 25%, rgba(30,20,64,0.6) 45%, rgba(30,20,64,0.92) 60%, #1E1440 75%)",
         }}
       />
     </div>

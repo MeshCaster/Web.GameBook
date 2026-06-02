@@ -9,9 +9,7 @@ import { useAuth } from "@/lib/auth/use-auth";
 import { apiClient } from "@/lib/api/client";
 import { fetchMyBookings, type BookingResponse } from "@/lib/api/bookings";
 import { Icon } from "@/components/ui/icon";
-import { IconBtn } from "@/components/ui/icon-btn";
 import { MonoTag } from "@/components/ui/mono-tag";
-import { CutBox } from "@/components/ui/cut-box";
 
 type UserProfile = {
   id: string;
@@ -122,36 +120,40 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-6 pb-2.5">
+      <div className="flex items-center justify-between px-4 pt-6 pb-4">
         <span
           className="font-head font-bold text-[15px]"
           style={{ color: GB.fg, letterSpacing: "1.8px" }}
         >
           PROFILE
         </span>
-        <IconBtn name="settings" onClick={handleSignOut} />
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-1.5 px-3 py-1.5 border transition-opacity hover:opacity-80"
+          style={{ backgroundColor: GB.surface, borderColor: GB.border, borderRadius: 6 }}
+        >
+          <Icon name="arrowRight" size={14} color={GB.danger} />
+          <span className="font-head font-bold text-[10px]" style={{ color: GB.danger, letterSpacing: "1px" }}>
+            SIGN OUT
+          </span>
+        </button>
       </div>
 
       <div className="overflow-y-auto pb-8">
         {/* Avatar + Identity */}
-        <div className="flex items-center gap-3.5 px-4 pb-4.5">
-          <CutBox
-            cut={10}
-            variant="trapezoid"
-            backgroundColor={GB.raised}
-            borderColor={GB.accent}
+        <div className="flex items-center gap-4 px-4 pb-6">
+          <div
+            className="w-[72px] h-[72px] rounded-full flex items-center justify-center border-2 shrink-0"
             style={{
-              width: 76,
-              height: 76,
-              boxShadow: `0 0 24px rgba(204,255,0,0.15)`,
+              backgroundColor: GB.raised,
+              borderColor: GB.accent,
+              boxShadow: `0 0 20px rgba(204,255,0,0.12)`,
             }}
           >
-            <div className="flex items-center justify-center w-full h-full">
-              <span className="font-disp text-[28px]" style={{ color: GB.bright }}>
-                {getInitials(displayName)}
-              </span>
-            </div>
-          </CutBox>
+            <span className="font-disp text-[26px]" style={{ color: GB.bright }}>
+              {getInitials(displayName)}
+            </span>
+          </div>
 
           <div className="flex-1 min-w-0">
             <p
@@ -179,18 +181,21 @@ export default function ProfilePage() {
 
         {/* Stats Grid */}
         <div
-          className="mx-4 mb-4 flex border"
-          style={{ borderColor: GB.border, backgroundColor: GB.border, gap: 1 }}
+          className="mx-4 mb-6 flex border overflow-hidden"
+          style={{ borderColor: GB.border, borderRadius: 8 }}
         >
           {[
             { value: String(profile?.totalBookings ?? bookings?.length ?? 0), label: "SESSIONS", color: GB.fg },
             { value: `${Math.round(totalHoursPlayed)}h`, label: "PLAYED", color: GB.accent },
             { value: String(profile?.totalReviews ?? 0), label: "REVIEWS", color: GB.cyan },
-          ].map(({ value, label, color }) => (
+          ].map(({ value, label, color }, i) => (
             <div
               key={label}
-              className="flex-1 py-3.5 px-1.5 flex flex-col items-center"
-              style={{ backgroundColor: GB.surface }}
+              className="flex-1 py-4 px-1.5 flex flex-col items-center"
+              style={{
+                backgroundColor: GB.surface,
+                borderLeft: i > 0 ? `1px solid ${GB.border}` : undefined,
+              }}
             >
               <span
                 className="font-disp text-[26px]"
@@ -199,7 +204,7 @@ export default function ProfilePage() {
                 {value}
               </span>
               <span
-                className="font-mono text-[8px] mt-1"
+                className="font-mono text-[8px] mt-1.5"
                 style={{ color: GB.fg3, letterSpacing: "1.12px" }}
               >
                 {label}
@@ -210,7 +215,7 @@ export default function ProfilePage() {
 
         {/* Tabs */}
         <div
-          className="flex mx-4 mb-3.5 border-b"
+          className="flex mx-4 mb-4 border-b"
           style={{ borderColor: GB.border }}
         >
           {(["UPCOMING", "HISTORY"] as const).map((t) => (
@@ -231,7 +236,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Tab Content */}
-        <div className="px-4 space-y-2.5">
+        <div className="px-4 space-y-4">
           {tab === "UPCOMING" &&
             (upcoming.length === 0 ? (
               <div className="py-8 text-center">
@@ -254,40 +259,16 @@ export default function ProfilePage() {
             ))}
         </div>
 
-        {/* Sign Out + Delete */}
-        <div className="px-4 mt-6 space-y-2.5">
-          <CutBox
-            cut={6}
-            variant="trapezoid"
-            backgroundColor="transparent"
-            borderColor={GB.border}
-            onClick={handleSignOut}
-          >
-            <div className="py-3.5 text-center">
-              <span
-                className="font-head font-bold text-[12px]"
-                style={{ color: GB.fg2, letterSpacing: "1.2px" }}
-              >
-                SIGN OUT
-              </span>
-            </div>
-          </CutBox>
-          <CutBox
-            cut={6}
-            variant="trapezoid"
-            backgroundColor="transparent"
-            borderColor={GB.danger}
+        {/* Delete Account */}
+        <div className="px-4 mt-8">
+          <button
             onClick={handleDeleteAccount}
+            className="w-full py-3 text-center transition-opacity hover:opacity-70"
           >
-            <div className="py-3.5 text-center">
-              <span
-                className="font-head font-bold text-[12px]"
-                style={{ color: GB.danger, letterSpacing: "1.2px" }}
-              >
-                DELETE ACCOUNT
-              </span>
-            </div>
-          </CutBox>
+            <span className="font-mono text-[11px]" style={{ color: GB.danger, letterSpacing: "1.2px" }}>
+              DELETE ACCOUNT
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -301,18 +282,20 @@ function BookingMini({ booking, past }: { booking: BookingResponse; past?: boole
   const countdown = !past ? getCountdown(booking.startsAt) : null;
 
   return (
-    <Link href={`/booking/ticket/${booking.id}`}>
-      <CutBox
-        cut={6}
-        variant="trapezoid"
-        backgroundColor={GB.surface}
-        borderColor={countdown ? GB.accent : GB.border}
-        style={countdown ? { boxShadow: `0 0 16px rgba(204,255,0,0.1)` } : undefined}
+    <Link href={`/booking/ticket/${booking.id}`} className="block">
+      <div
+        className="border overflow-hidden transition-colors"
+        style={{
+          backgroundColor: GB.surface,
+          borderColor: countdown ? GB.accent : GB.border,
+          borderRadius: 8,
+          boxShadow: countdown ? `0 0 16px rgba(204,255,0,0.08)` : undefined,
+        }}
       >
-        <div className="flex gap-3 p-3">
+        <div className="flex gap-3 p-3.5">
           <div
-            className="w-12 py-1.5 flex flex-col items-center border"
-            style={{ backgroundColor: GB.raised, borderColor: GB.border }}
+            className="w-12 py-2 flex flex-col items-center border shrink-0"
+            style={{ backgroundColor: GB.raised, borderColor: GB.border, borderRadius: 6 }}
           >
             <span className="font-mono text-[9px]" style={{ color: GB.fg3, letterSpacing: "1.08px" }}>
               {dayLabel}
@@ -348,7 +331,7 @@ function BookingMini({ booking, past }: { booking: BookingResponse; past?: boole
             </div>
           )}
         </div>
-      </CutBox>
+      </div>
     </Link>
   );
 }

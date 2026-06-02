@@ -42,7 +42,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body
         className={`${bebasNeue.variable} ${spaceGrotesk.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
-        style={{ backgroundColor: "#080810", color: "#F0EEFF" }}
+        style={{ backgroundColor: "#1E1440", color: "#F0EEFF" }}
       >
         <Providers>{children}</Providers>
       </body>

@@ -8,7 +8,6 @@ import { GB } from "@/theme/tokens";
 import { fetchBookingById } from "@/lib/api/bookings";
 import { Icon } from "@/components/ui/icon";
 import { MonoTag } from "@/components/ui/mono-tag";
-import { CutBox } from "@/components/ui/cut-box";
 import { GlitchText } from "@/components/ui/glitch-text";
 
 function formatDateLabel(iso: string): string {
@@ -37,31 +36,23 @@ function computeHours(startsAt: string, endsAt: string): string {
 
 function Stat({ label, value, color = GB.fg }: { label: string; value: string; color?: string }) {
   return (
-    <div>
-      <p className="font-mono text-[9px]" style={{ color: GB.fg3, letterSpacing: "1.26px" }}>{label}</p>
+    <div className="flex flex-col">
+      <p className="font-mono text-[8px]" style={{ color: GB.fg3, letterSpacing: "1.4px" }}>{label}</p>
       <p className="font-head font-bold text-[14px] mt-0.5" style={{ color, letterSpacing: "0.56px" }}>{value}</p>
     </div>
   );
 }
 
 function CornerTicks() {
-  const tick = 10;
+  const tick = 12;
   const sw = 1.5;
   const color = GB.accent;
-  const lineStyle = (x1: number, y1: number, x2: number, y2: number) => ({
-    position: "absolute" as const,
-    left: x1,
-    top: y1,
-    width: Math.abs(x2 - x1) || sw,
-    height: Math.abs(y2 - y1) || sw,
-    backgroundColor: color,
-  });
 
   return (
     <>
       {/* TL */}
-      <div style={{ ...lineStyle(0, 0, tick, 0) }} />
-      <div style={{ ...lineStyle(0, 0, 0, tick) }} />
+      <div className="absolute left-0 top-0" style={{ width: tick, height: sw, backgroundColor: color }} />
+      <div className="absolute left-0 top-0" style={{ width: sw, height: tick, backgroundColor: color }} />
       {/* TR */}
       <div className="absolute right-0 top-0" style={{ width: tick, height: sw, backgroundColor: color }} />
       <div className="absolute right-0 top-0" style={{ width: sw, height: tick, backgroundColor: color }} />
@@ -97,151 +88,141 @@ export default function TicketPage() {
   }
 
   const qrRef = booking.qrCode || `GB-${booking.id.slice(0, 8).toUpperCase()}`;
-  const timeLabel = `${formatTime(booking.startsAt)} · ${computeHours(booking.startsAt, booking.endsAt)}`;
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          text: `GameBook Pass: ${booking.venueName}\n${formatDateLabel(booking.startsAt)} at ${formatTime(booking.startsAt)}\nRef: ${qrRef}`,
-        });
-      } catch {
-        /* cancelled */
-      }
-    }
-  };
+  const timeLabel = `${formatTime(booking.startsAt)} – ${formatTime(booking.endsAt)}`;
+  const durationLabel = computeHours(booking.startsAt, booking.endsAt);
 
   return (
-    <div className="min-h-screen relative" style={{ backgroundColor: GB.bg }}>
-      {/* Cyan glow */}
+    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: GB.bg }}>
+      {/* Background glow */}
       <div
-        className="absolute top-20 left-1/2 -translate-x-1/2 w-[300px] h-[300px] rounded-full opacity-40"
-        style={{ backgroundColor: GB.cyanGlow }}
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full blur-3xl opacity-20 pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${GB.cyan} 0%, transparent 70%)` }}
       />
 
-      <div className="relative z-10 max-w-md mx-auto px-4 pt-12 pb-10">
+      <div className="relative z-10 max-w-md mx-auto px-5 pt-10 pb-10">
+
         {/* Success header */}
-        <div className="flex flex-col items-center pb-5.5">
-          <div className="relative w-14 h-14 flex items-center justify-center">
-            <div className="absolute w-[72px] h-[72px] rounded-full border opacity-35" style={{ borderColor: GB.success }} />
-            <div className="absolute w-14 h-14 rounded-full opacity-15" style={{ backgroundColor: GB.success }} />
-            <Icon name="check" size={28} color={GB.success} />
+        <div className="flex flex-col items-center mb-6">
+          <div className="relative w-12 h-12 flex items-center justify-center mb-3">
+            <div
+              className="absolute inset-0 rounded-full opacity-15"
+              style={{ backgroundColor: GB.success }}
+            />
+            <div
+              className="absolute -inset-2 rounded-full border opacity-20"
+              style={{ borderColor: GB.success }}
+            />
+            <Icon name="check" size={24} color={GB.success} />
           </div>
 
-          <div className="mt-3.5">
-            <MonoTag color={GB.success}>STATUS · CONFIRMED</MonoTag>
-          </div>
+          <GlitchText text="YOU'RE LOCKED IN." className="text-[34px] leading-none" />
 
-          <div className="mt-2">
-            <GlitchText text="YOU'RE LOCKED IN." className="text-[36px] leading-none" />
-          </div>
-
-          <p className="font-body text-[13px] mt-1.5" style={{ color: GB.fg2 }}>
-            Flash this ticket at the front desk.
+          <p className="font-body text-[13px] mt-2 text-center" style={{ color: GB.fg3 }}>
+            Flash this ticket at the front desk
           </p>
         </div>
 
-        {/* Ticket card */}
-        <div className="mb-4.5">
-          <CutBox
-            cut={14}
-            backgroundColor={GB.surface}
-            borderColor={GB.accent}
-            style={{ boxShadow: `0 0 28px rgba(204,255,0,0.15)` }}
+        {/* ─── TICKET CARD ─── */}
+        <div
+          className="border overflow-hidden mb-5"
+          style={{
+            backgroundColor: GB.surface,
+            borderColor: GB.border,
+            borderRadius: 12,
+            boxShadow: `0 4px 40px rgba(0,0,0,0.4), 0 0 24px ${GB.primGlow}`,
+          }}
+        >
+
+          {/* Card header */}
+          <div
+            className="px-5 py-4 border-b"
+            style={{ borderColor: GB.border }}
           >
-            {/* Top - Venue */}
-            <div className="p-4 pb-3.5">
-              <div className="flex justify-between items-center mb-1.5">
-                <MonoTag color={GB.accent}>{'// GAMEBOOK PASS'}</MonoTag>
-                <span className="font-mono text-[10px]" style={{ color: GB.cyan, letterSpacing: "1.2px" }}>
-                  {booking.venueSlug?.toUpperCase().slice(0, 7) ?? "---"}
-                </span>
-              </div>
-              <p className="font-disp text-[26px]" style={{ color: GB.fg, letterSpacing: "1.04px", lineHeight: "28px" }}>
-                {booking.venueName}
-              </p>
-              <p className="font-mono text-[10px] mt-1" style={{ color: GB.fg3 }}>
-                {booking.venueSlug?.toUpperCase() ?? ""}
-              </p>
+            <div className="flex items-center justify-between mb-2">
+              <MonoTag color={GB.accent}>{"// GAMEBOOK PASS"}</MonoTag>
+              <MonoTag color={GB.success}>CONFIRMED</MonoTag>
             </div>
-
-            {/* QR Code */}
-            <div className="flex flex-col items-center p-4">
-              <div className="relative p-4" style={{ backgroundColor: GB.bg }}>
-                <CornerTicks />
-                <div className="p-1.5">
-                  <QRCodeSVG
-                    value={qrRef}
-                    size={120}
-                    bgColor={GB.bg}
-                    fgColor={GB.cyan}
-                  />
-                </div>
-              </div>
-              <div className="mt-2.5 text-center">
-                <p className="font-mono text-[9px]" style={{ color: GB.fg3, letterSpacing: "1.44px" }}>REF</p>
-                <p className="font-mono text-[11px] mt-0.5" style={{ color: GB.fg, letterSpacing: "0.88px" }}>
-                  {qrRef}
-                </p>
-              </div>
-            </div>
-
-            {/* Perforation */}
-            <div
-              className="h-3.5 border-t border-b border-dashed flex items-center justify-between"
-              style={{ borderColor: GB.border, backgroundColor: GB.bg }}
+            <p
+              className="font-disp text-[28px]"
+              style={{ color: GB.fg, letterSpacing: "1.12px", lineHeight: "30px" }}
             >
-              <div className="w-4 h-4 rounded-full border -ml-2" style={{ backgroundColor: GB.bg, borderColor: GB.accent }} />
-              <div className="w-4 h-4 rounded-full border -mr-2" style={{ backgroundColor: GB.bg, borderColor: GB.accent }} />
-            </div>
+              {booking.venueName}
+            </p>
+          </div>
 
-            {/* Details Grid */}
-            <div className="p-4 pt-3.5 grid grid-cols-2 gap-3.5">
+          {/* QR section */}
+          <div className="flex flex-col items-center px-5 py-5">
+            <div
+              className="relative p-5"
+              style={{ backgroundColor: GB.bg, borderRadius: 8 }}
+            >
+              <CornerTicks />
+              <QRCodeSVG
+                value={qrRef}
+                size={140}
+                bgColor={GB.bg}
+                fgColor={GB.cyan}
+              />
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <span className="font-mono text-[8px]" style={{ color: GB.fg3, letterSpacing: "1.6px" }}>REF</span>
+              <span className="font-mono text-[12px] font-semibold" style={{ color: GB.fg, letterSpacing: "1.2px" }}>{qrRef}</span>
+            </div>
+          </div>
+
+          {/* Perforation line */}
+          <div className="relative px-5">
+            <div
+              className="border-t border-dashed"
+              style={{ borderColor: GB.borderHi }}
+            />
+            <div
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full"
+              style={{ backgroundColor: GB.bg }}
+            />
+            <div
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full"
+              style={{ backgroundColor: GB.bg }}
+            />
+          </div>
+
+          {/* Details section */}
+          <div className="px-5 py-4">
+            {/* Row 1 */}
+            <div className="grid grid-cols-2 gap-y-4">
               <Stat label="STATION" value={booking.stationLabel} />
               <Stat label="TYPE" value={booking.stationKind} />
               <Stat label="DATE" value={formatDateLabel(booking.startsAt)} />
               <Stat label="TIME" value={timeLabel} />
-              <Stat label="PLAYERS" value={`× ${booking.guestCount}`} />
-              <Stat label="TOTAL" value={`${booking.totalPrice} ${booking.currency}`} color={GB.accent} />
+              <Stat label="DURATION" value={durationLabel} />
+              <Stat label="PLAYERS" value={`${booking.guestCount}`} />
             </div>
-          </CutBox>
-        </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 mb-4">
-          <div className="flex-1">
-            <CutBox cut={6} variant="trapezoid" backgroundColor="transparent" borderColor={GB.border} onClick={handleShare}>
-              <div className="flex items-center justify-center py-3.5 gap-2">
-                <Icon name="share" size={14} color={GB.fg2} />
-                <span className="font-head font-bold text-[11px]" style={{ color: GB.fg2, letterSpacing: "1.54px" }}>
-                  SHARE
+            {/* Total */}
+            <div
+              className="mt-4 pt-3 border-t flex items-baseline justify-between"
+              style={{ borderColor: GB.border }}
+            >
+              <span className="font-mono text-[9px]" style={{ color: GB.fg3, letterSpacing: "1.4px" }}>TOTAL</span>
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-disp text-[28px]" style={{ color: GB.accent, letterSpacing: "1px" }}>
+                  {booking.totalPrice}
                 </span>
+                <span className="font-mono text-[11px]" style={{ color: GB.fg3 }}>{booking.currency}</span>
               </div>
-            </CutBox>
-          </div>
-          <div className="flex-1">
-            <CutBox cut={6} variant="trapezoid" backgroundColor={GB.accent} borderColor={GB.accent}>
-              <div className="flex items-center justify-center py-3.5 gap-2">
-                <Icon name="download" size={14} color={GB.fgInv} />
-                <span className="font-head font-bold text-[11px]" style={{ color: GB.fgInv, letterSpacing: "1.54px" }}>
-                  ADD TO WALLET
-                </span>
-              </div>
-            </CutBox>
+            </div>
           </div>
         </div>
 
-        <p className="text-center font-mono text-[10px] mb-4 px-8" style={{ color: GB.fg3, letterSpacing: "0.6px" }}>
-          Show this code at the front desk. Your station unlocks automatically.
-        </p>
-
-        <CutBox cut={8} variant="trapezoid" backgroundColor="transparent" borderColor={GB.border} onClick={() => router.replace("/home")}>
-          <div className="py-3.5 text-center">
-            <span className="font-head font-bold text-[12px]" style={{ color: GB.fg2, letterSpacing: "1.68px" }}>
-              ← BACK TO HOME
-            </span>
-          </div>
-        </CutBox>
+        {/* Back to home */}
+        <button
+          onClick={() => router.replace("/home")}
+          className="w-full py-3 text-center transition-opacity hover:opacity-70"
+        >
+          <span className="font-mono text-[11px]" style={{ color: GB.fg3, letterSpacing: "1.2px" }}>
+            BACK TO HOME
+          </span>
+        </button>
       </div>
     </div>
   );

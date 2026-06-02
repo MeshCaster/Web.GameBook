@@ -1,4 +1,5 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -6,11 +7,31 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
 
   if (code) {
-    const supabase = createBrowserClient(
+    const cookieStore = cookies();
+
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          },
+        },
+      },
     );
-    await supabase.auth.exchangeCodeForSession(code);
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      // If exchange fails, redirect back to sign-in with an error hint
+      return NextResponse.redirect(`${origin}/sign-in`);
+    }
   }
 
   return NextResponse.redirect(`${origin}/home`);

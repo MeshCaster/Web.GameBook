@@ -22,6 +22,7 @@ export const StepBar = React.memo(function StepBar({ current }: { current: numbe
                 style={{
                   backgroundColor: done || active ? "rgba(204,255,0,0.12)" : GB.surface,
                   borderColor: badgeColor,
+                  borderRadius: 4,
                 }}
               >
                 <span className="font-mono text-[10px] font-bold" style={{ color: badgeColor }}>

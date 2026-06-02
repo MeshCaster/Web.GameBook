@@ -8,7 +8,7 @@ import { Icon } from "@/components/ui/icon";
 
 export default function OnboardingPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 max-w-md mx-auto text-center">
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] px-6 max-w-md md:max-w-lg mx-auto text-center">
       {/* Tagline */}
       <p
         className="font-mono text-[10px] mb-3"
@@ -55,7 +55,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* CTAs */}
-      <div className="w-full space-y-3">
+      <div className="w-full space-y-4 md:space-y-5 md:px-10">
         <Link href="/sign-in">
           <CTAButton label="GET STARTED" onClick={() => {}} />
         </Link>

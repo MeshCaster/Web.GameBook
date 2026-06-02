@@ -2,7 +2,6 @@
 
 import React from "react";
 import { GB } from "@/theme/tokens";
-import { CutBox } from "@/components/ui/cut-box";
 import { Icon, type IconName } from "@/components/ui/icon";
 
 type Props = {
@@ -32,11 +31,14 @@ export const CounterRow = React.memo(function CounterRow({
   const canInc = value + step <= max;
 
   return (
-    <CutBox cut={6} variant="trapezoid" backgroundColor={GB.surface} borderColor={GB.border}>
+    <div
+      className="border"
+      style={{ backgroundColor: GB.surface, borderColor: GB.border, borderRadius: 6 }}
+    >
       <div className="flex items-center px-3.5 py-3">
         <div
           className="w-8 h-8 flex items-center justify-center border mr-2.5"
-          style={{ backgroundColor: GB.raised, borderColor: GB.border }}
+          style={{ backgroundColor: GB.raised, borderColor: GB.border, borderRadius: 4 }}
         >
           <Icon name={icon} size={16} color={GB.bright} />
         </div>
@@ -54,13 +56,14 @@ export const CounterRow = React.memo(function CounterRow({
             style={{
               backgroundColor: canDec ? GB.raised : "transparent",
               borderColor: canDec ? GB.border : "rgba(42,42,64,0.4)",
+              borderRadius: 4,
             }}
           >
             <Icon name="minus" size={14} color={canDec ? GB.fg2 : GB.fg3} />
           </button>
           <div
             className="min-w-[44px] h-8 px-1.5 flex items-center justify-center border"
-            style={{ backgroundColor: GB.raised, borderColor: GB.borderHi }}
+            style={{ backgroundColor: GB.raised, borderColor: GB.borderHi, borderRadius: 4 }}
           >
             <span className="font-disp text-[20px]" style={{ color: GB.accent, lineHeight: "22px" }}>
               {formatValue ? formatValue(value) : value}
@@ -72,12 +75,13 @@ export const CounterRow = React.memo(function CounterRow({
             style={{
               backgroundColor: canInc ? GB.raised : "transparent",
               borderColor: canInc ? GB.border : "rgba(42,42,64,0.4)",
+              borderRadius: 4,
             }}
           >
             <Icon name="plus" size={14} color={canInc ? GB.fg2 : GB.fg3} />
           </button>
         </div>
       </div>
-    </CutBox>
+    </div>
   );
 });

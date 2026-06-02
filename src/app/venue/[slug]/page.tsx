@@ -14,7 +14,6 @@ import {
 import { StationRow, type StationGroup } from "@/components/venue/station-row";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { MonoTag } from "@/components/ui/mono-tag";
-import { CutBox } from "@/components/ui/cut-box";
 import { CTAButton } from "@/components/ui/cta-button";
 
 const KIND_CONFIG: Record<string, { name: string; icon: IconName }> = {
@@ -55,7 +54,7 @@ function groupStations(
   if (stations) {
     for (const station of stations) {
       for (const w of station.availableWindows) {
-        if (new Date(w.startsAt) <= now && now < new Date(w.endsAt)) {
+        if (new Date(w.endsAt) > now) {
           availableStationIds.add(station.stationId);
           break;
         }
@@ -90,7 +89,6 @@ export default function VenueDetailPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const [tab, setTab] = useState<Tab>("STATIONS");
-  const [liked, setLiked] = useState(false);
 
   const { data: venue, isLoading } = useQuery({
     queryKey: ["venue", slug],
@@ -132,10 +130,25 @@ export default function VenueDetailPage() {
   const availableNow = stationGroups.reduce((sum, g) => sum + g.available, 0);
 
   return (
-    <div className="min-h-screen relative" style={{ backgroundColor: GB.bg }}>
-      <div className="max-w-3xl mx-auto pb-40">
+    <div className="flex flex-col h-[100dvh]" style={{ backgroundColor: GB.bg }}>
+      <div className="flex-1 overflow-y-auto">
+      <div className="max-w-3xl mx-auto pb-6">
+        {/* Back button — above hero */}
+        <div className="px-4 pt-4 pb-2">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 border px-3 py-2"
+            style={{ backgroundColor: GB.surface, borderColor: GB.border, borderRadius: 6 }}
+          >
+            <Icon name="arrowLeft" size={16} color={GB.accent} />
+            <span className="font-head font-bold text-[11px] uppercase" style={{ color: GB.accent, letterSpacing: "1.2px" }}>
+              BACK
+            </span>
+          </button>
+        </div>
+
         {/* Hero */}
-        <div className="relative h-[320px]" style={{ backgroundColor: GB.raised }}>
+        <div className="relative h-[280px] mx-4 overflow-hidden" style={{ backgroundColor: GB.raised, borderRadius: 8 }}>
           {(venue.coverUrl || venue.imageUrl) && (
             <Image
               src={venue.coverUrl ?? venue.imageUrl ?? ""}
@@ -150,22 +163,9 @@ export default function VenueDetailPage() {
           <div
             className="absolute inset-0"
             style={{
-              background: "linear-gradient(to bottom, rgba(8,8,16,0.6) 0%, transparent 30%, rgba(8,8,16,0.95) 100%)",
+              background: "linear-gradient(to bottom, transparent 30%, rgba(8,8,16,0.95) 100%)",
             }}
           />
-
-          {/* Top buttons */}
-          <div className="absolute top-4 left-4 right-4 flex justify-between">
-            <GlassBtn icon="arrowLeft" onClick={() => router.back()} />
-            <div className="flex gap-1.5">
-              <GlassBtn
-                icon="heart"
-                color={liked ? GB.danger : GB.fg2}
-                onClick={() => setLiked(!liked)}
-              />
-              <GlassBtn icon="share" />
-            </div>
-          </div>
 
           {/* Tags */}
           <div className="absolute bottom-24 left-4 flex gap-1.5">
@@ -304,26 +304,14 @@ export default function VenueDetailPage() {
         )}
       </div>
 
-      {/* Sticky bottom CTA */}
+      </div>
+
+      {/* Bottom bar — always pinned */}
       <div
-        className="fixed bottom-0 left-0 right-0 lg:left-[240px] z-30"
-        style={{
-          background: "linear-gradient(to top, rgba(8,8,16,0.97) 60%, transparent)",
-          padding: "24px 16px 18px",
-        }}
+        className="shrink-0 border-t"
+        style={{ backgroundColor: GB.bg, borderColor: GB.border }}
       >
-        <div className="max-w-3xl mx-auto space-y-2">
-          <div className="flex justify-between items-baseline">
-            <span className="font-mono text-[10px]" style={{ color: GB.fg3, letterSpacing: "1.4px" }}>
-              STARTING FROM
-            </span>
-            <div className="flex items-baseline gap-1">
-              <span className="font-disp text-[26px]" style={{ color: GB.accent, letterSpacing: "1.04px" }}>
-                {minPrice}
-              </span>
-              <span className="font-mono text-[11px]" style={{ color: GB.fg3 }}>GEL/HR</span>
-            </div>
-          </div>
+        <div className="max-w-3xl mx-auto px-4 pt-3 pb-4">
           <CTAButton
             label="BOOK A BAY"
             onClick={() => router.push(`/booking/${venue.id}?slug=${venue.slug}`)}
@@ -331,30 +319,5 @@ export default function VenueDetailPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function GlassBtn({
-  icon,
-  color = GB.fg2,
-  onClick,
-}: {
-  icon: IconName;
-  color?: string;
-  onClick?: () => void;
-}) {
-  return (
-    <CutBox
-      cut={6}
-      variant="trapezoid"
-      backgroundColor="rgba(8,8,16,0.6)"
-      borderColor={GB.border}
-      onClick={onClick}
-      style={{ width: 36, height: 36 }}
-    >
-      <div className="flex items-center justify-center w-full h-full">
-        <Icon name={icon} size={16} color={color} />
-      </div>
-    </CutBox>
   );
 }

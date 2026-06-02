@@ -10,12 +10,12 @@ const config: Config = {
     extend: {
       colors: {
         gb: {
-          bg: "#080810",
-          surface: "#12121E",
-          raised: "#1C1C2E",
-          raisedHi: "#22223A",
-          border: "#2A2A40",
-          borderHi: "#3A3A55",
+          bg: "#1E1440",
+          surface: "#271D4A",
+          raised: "#312756",
+          raisedHi: "#3B3162",
+          border: "#453B6E",
+          borderHi: "#554B7E",
           primary: "#7B35FF",
           bright: "#9B6DFF",
           primDim: "#4A1FCC",
@@ -25,7 +25,7 @@ const config: Config = {
           fg: "#F0EEFF",
           fg2: "#B0A8CC",
           fg3: "#8080A0",
-          fgInv: "#080810",
+          fgInv: "#1E1440",
           success: "#22FF88",
           danger: "#FF3366",
           warning: "#FFB800",

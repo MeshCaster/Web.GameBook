@@ -10,11 +10,9 @@ import { useGeolocation } from "@/hooks/use-geolocation";
 import { useDebounce } from "@/hooks/use-debounce";
 import { VenueRow } from "@/components/venue/venue-row";
 import { Icon } from "@/components/ui/icon";
-import { IconBtn } from "@/components/ui/icon-btn";
 import { Pill } from "@/components/ui/pill";
 import { MonoTag } from "@/components/ui/mono-tag";
 import { SectionHeader } from "@/components/ui/section-header";
-import { CutBox } from "@/components/ui/cut-box";
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
@@ -54,46 +52,26 @@ export default function HomePage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Greeting */}
-      <div className="flex items-center justify-between px-4 pt-6 pb-3.5">
-        <div>
-          <p
-            className="font-mono text-[10px]"
-            style={{ color: GB.cyan, letterSpacing: "1.6px" }}
-          >
-            {'// GG, PLAYER'}
-          </p>
-          <div className="mt-1 flex items-center gap-1.5">
-            <Icon name="mapPin" size={14} color={GB.accent} />
-            <span
-              className="font-head font-bold text-[16px]"
-              style={{ color: GB.fg }}
-            >
-              TBILISI
-            </span>
-            <Icon name="chevDown" size={14} color={GB.fg3} />
-          </div>
-        </div>
-        <div className="flex gap-1.5">
-          <IconBtn name="bell" badge />
-          <IconBtn name="user" />
-        </div>
-      </div>
-
       {/* Search */}
-      <div className="px-4 pb-3.5">
-        <CutBox cut={8} variant="trapezoid" backgroundColor={GB.surface} borderColor={GB.border}>
-          <div className="flex items-center gap-2.5 py-2.5 px-3.5">
-            <Icon name="search" size={16} color={GB.fg3} />
-            <input
-              placeholder="Search arenas, games, areas..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent font-body text-[13px] text-gb-fg outline-none placeholder:text-[#8080A0]"
-            />
-            <Icon name="sliders" size={16} color={GB.accent} />
-          </div>
-        </CutBox>
+      <div className="px-4 pt-6 pb-3.5">
+        <div
+          className="flex items-center gap-2.5 py-2.5 px-3.5 border"
+          style={{
+            backgroundColor: GB.surface,
+            borderColor: GB.border,
+            borderRadius: 6,
+          }}
+        >
+          <Icon name="search" size={16} color={GB.fg3} />
+          <input
+            placeholder="Search arenas, games, areas..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 bg-transparent font-body text-[13px] outline-none"
+            style={{ color: GB.fg }}
+          />
+          <Icon name="sliders" size={16} color={GB.accent} />
+        </div>
       </div>
 
       {/* Pills */}
@@ -125,7 +103,7 @@ export default function HomePage() {
       <SectionHeader sub={`${String(nearby.length).padStart(2, "0")} RESULTS`}>
         NEARBY ARENAS
       </SectionHeader>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 px-4 pb-8">
+      <div className="grid grid-cols-2 gap-4 px-4 pb-8">
         {nearby.map((venue) => (
           <VenueRow key={venue.id} venue={venue} />
         ))}
@@ -153,8 +131,11 @@ function FeaturedCard({ venue }: { venue: VenueResponse }) {
   const totalCapacity = venue.stations.reduce((sum, s) => sum + s.capacity, 0);
 
   return (
-    <Link href={`/venue/${venue.slug}`}>
-      <CutBox cut={14} backgroundColor={GB.surface} borderColor={GB.border}>
+    <Link href={`/venue/${venue.slug}`} className="block">
+      <div
+        className="border overflow-hidden transition-colors"
+        style={{ backgroundColor: GB.surface, borderColor: GB.border, borderRadius: 12 }}
+      >
         {/* Hero */}
         <div className="relative h-[180px]" style={{ backgroundColor: GB.raised }}>
           {(venue.coverUrl || venue.imageUrl) && (
@@ -222,7 +203,7 @@ function FeaturedCard({ venue }: { venue: VenueResponse }) {
             </span>
           </div>
         </div>
-      </CutBox>
+      </div>
     </Link>
   );
 }

@@ -6,7 +6,7 @@
 
 html,
 body {
-  background: #080810;
+  background: #1E1440;
   color: #f0eeff;
   min-height: 100vh;
 }
@@ -17,7 +17,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #12121e;
+  background: #1E1440;
 }
 ::-webkit-scrollbar-thumb {
   background: #2a2a40;
@@ -35,8 +35,31 @@ body {
 
 /* Leaflet overrides for dark mode */
 .leaflet-container {
-  background: #080810 !important;
+  background: #1E1440 !important;
 }
 .leaflet-control-attribution {
   display: none !important;
+}
+
+/* Pulsating current-location dot */
+.pulse-dot {
+  width: 14px;
+  height: 14px;
+  background: #7B35FF;
+  border: 2px solid #F0EEFF;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(123,53,255,0.6);
+  position: relative;
+}
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 2px solid rgba(123,53,255,0.6);
+  border-radius: 50%;
+  animation: pulse-ring 2s ease-out infinite;
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
 }

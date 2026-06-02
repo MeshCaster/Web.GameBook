@@ -7,7 +7,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#080810" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#1E1440" }}>
       <SidebarNav />
       <MobileNav />
       {/* Main content: push right on desktop for sidebar, pad bottom on mobile for nav */}
