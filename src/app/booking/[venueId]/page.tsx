@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { GB } from "@/theme/tokens";
 import {
   fetchVenueBySlug,
@@ -35,7 +35,7 @@ function formatDate(d: Date) {
 }
 
 function formatTime24(d: Date): string {
-  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+  return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`;
 }
 
 function windowMinutes(w: AvailableWindow): number {
@@ -170,9 +170,9 @@ export default function BookingPage() {
     }
     const windowStart = new Date(selectedWindow.startsAt);
     const target = new Date(windowStart);
-    target.setHours(hours, minutes, 0, 0);
+    target.setUTCHours(hours, minutes, 0, 0);
     if (target.getTime() < windowStart.getTime()) {
-      target.setDate(target.getDate() + 1);
+      target.setUTCDate(target.getUTCDate() + 1);
     }
     let offsetMin = Math.round((target.getTime() - windowStart.getTime()) / MS_PER_MIN);
     offsetMin = Math.max(0, Math.min(offsetMin, maxArrivalOffset));
@@ -181,9 +181,14 @@ export default function BookingPage() {
     setArrivalOffset(offsetMin);
   }, [selectedWindow, arrivalOffset, formatArrival, maxArrivalOffset]);
 
+  const queryClient = useQueryClient();
   const bookMutation = useMutation({
     mutationFn: (data: CreateBookingRequest) => createBooking(data),
-    onSuccess: (booking) => router.replace(`/booking/ticket/${booking.id}`),
+    onSuccess: (booking) => {
+      queryClient.invalidateQueries({ queryKey: ["venue-availability"] });
+      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+      router.replace(`/booking/ticket/${booking.id}`);
+    },
     onError: (err: Error) => window.alert(`Booking Failed: ${err.message}`),
   });
 

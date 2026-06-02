@@ -18,12 +18,12 @@ function formatDateLabel(iso: string): string {
     "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
     "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
   ];
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  return `${days[d.getUTCDay()]} ${d.getUTCDate()} ${months[d.getUTCMonth()]}`;
 }
 
 function formatTime(iso: string): string {
   const d = new Date(iso);
-  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+  return `${d.getUTCHours().toString().padStart(2, "0")}:${d.getUTCMinutes().toString().padStart(2, "0")}`;
 }
 
 function computeDuration(startsAt: string, endsAt: string): string {

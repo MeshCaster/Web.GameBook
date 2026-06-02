@@ -96,9 +96,14 @@ export default function VenueDetailPage() {
     enabled: !!slug,
   });
 
+  const todayStr = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
+  }, []);
+
   const { data: availability } = useQuery({
-    queryKey: ["venue-availability", slug],
-    queryFn: () => fetchVenueAvailability(slug),
+    queryKey: ["venue-availability", slug, todayStr],
+    queryFn: () => fetchVenueAvailability(slug, todayStr),
     enabled: !!slug,
   });
 
